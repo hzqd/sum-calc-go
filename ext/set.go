@@ -1,6 +1,8 @@
 package ext
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"maps"
 )
@@ -20,7 +22,7 @@ func SetOf[E comparable](es ...E) Set[E] {
 }
 
 func (s Set[E]) ForEach(fn func(E)) {
-	for e, _ := range s {
+	for e := range s {
 		fn(e)
 	}
 }
@@ -33,7 +35,7 @@ func (s Set[E]) Empty() bool {
 	return len(s) == 0
 }
 
-func (s Set[E]) Append(element E) {
+func (s Set[E]) Insert(element E) {
 	s[element] = Unit{}
 }
 
@@ -53,8 +55,8 @@ func (s Set[E]) Or(other Set[E]) Set[E] {
 		s0, s1 = s1, s0
 	}
 	s_ := maps.Clone(s0)
-	for e, u := range s1 {
-		s_[e] = u
+	for e := range s1 {
+		s_[e] = Unit{}
 	}
 	return s_
 }
@@ -78,9 +80,9 @@ func (s Set[E]) And(other Set[E]) Set[E] {
 func (s Set[E]) Sub(other Set[E]) Set[E] {
 	if s.Len() < other.Len()*2 {
 		s_ := Set_[E](s.Len() / 2)
-		for e, u := range s {
+		for e := range s {
 			if !other.Contains(e) {
-				s_[e] = u
+				s_[e] = Unit{}
 			}
 		}
 		return s_
@@ -100,11 +102,11 @@ func (s Set[E]) Xor(other Set[E]) Set[E] {
 		s0, s1 = s1, s0
 	}
 	s_ := maps.Clone(s0)
-	for e, u := range s1 {
+	for e := range s1 {
 		if s0.Contains(e) {
 			s_.Remove(e)
 		} else {
-			s_[e] = u
+			s_[e] = Unit{}
 		}
 	}
 	return s_
@@ -129,4 +131,22 @@ func (s Set[E]) String() string {
 func (s Set[E]) append_(element E) Set[E] {
 	s[element] = Unit{}
 	return s
+}
+
+// MarshalJSON returns m as the JSON encoding of m.
+func (s Set[E]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.ToVec())
+}
+
+// UnmarshalJSON sets *m to a copy of data.
+func (s *Set[E]) UnmarshalJSON(data []byte) error {
+	if s == nil {
+		return errors.New("UnmarshalJSON on nil pointer")
+	}
+	vec := new(Vec[E])
+	err := json.Unmarshal(data, vec)
+	if err == nil {
+		*s = SetOf[E](*vec...)
+	}
+	return err
 }

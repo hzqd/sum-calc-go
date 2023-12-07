@@ -1,6 +1,8 @@
 package ext
 
-import "slices"
+import (
+	"slices"
+)
 
 type Vec[E any] []E
 
@@ -8,18 +10,17 @@ func Vec_[E any](cap int) Vec[E] {
 	return make([]E, 0, cap)
 }
 
-func VecInit[E any](len_ int, inits ...E) Vec[E] {
-	v := make([]E, len_)
-	l := len(inits)
-	if l > 0 {
-		for i := 0; i < len_; {
-			for j := 0; j < l && i < len_; j++ {
-				v[i] = inits[j]
-				i += 1
-			}
+func VecGen[E any](len_ int, fn_ ...func(int) E) Vec[E] {
+	if len(fn_) > 0 {
+		vec := Vec_[E](len_)
+		fn := fn_[0]
+		for i := 0; i < len_; i++ {
+			vec.Append(fn(i))
 		}
+		return vec
+	} else {
+		return make([]E, len_)
 	}
-	return v
 }
 
 func VecOf[E any](es ...E) Vec[E] {
@@ -42,6 +43,10 @@ func (v Vec[E]) Cap() int {
 
 func (v Vec[E]) Empty() bool {
 	return len(v) == 0
+}
+
+func (v Vec[E]) Get(index int) E {
+	return v[index]
 }
 
 func (v Vec[E]) GetOr(index int, or E) E {
@@ -74,10 +79,6 @@ func (v *Vec[E]) Insert(index int, elements ...E) {
 	*v = slices.Insert(*v, index, elements...)
 }
 
-func (v *Vec[E]) Replace(start, end int, elements ...E) {
-	*v = slices.Replace(*v, start, end, elements...)
-}
-
 func (v *Vec[E]) RemoveAt(index int) {
 	*v = slices.Delete(*v, index, index+1)
 }
@@ -99,6 +100,24 @@ func (v *Vec[E]) Clip() {
 	*v = slices.Clip(*v)
 }
 
+func (v Vec[E]) Rev() RevVec[E] {
+	return RevVec[E]{v}
+}
+
 func (v Vec[E]) append_(element E) Vec[E] {
 	return append(v, element)
+}
+
+type RevVec[E any] struct {
+	Vec[E]
+}
+
+func (v RevVec[E]) ForEach(fn func(E)) {
+	for i := v.Len() - 1; i >= 0; i-- {
+		fn(v.Vec[i])
+	}
+}
+
+func (v RevVec[E]) Get(index int) E {
+	return v.Vec.Get(v.Len() - index - 1)
 }

@@ -9,11 +9,14 @@ import (
 	"sum-calc/ext"
 )
 
+func readLn() string {
+	r, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	return strings.TrimRight(r, "\n")
+}
+
 func main() {
 	for {
-		reader := bufio.NewReader(os.Stdin)
-		read, _ := reader.ReadString('\n')
-		str := strings.TrimRight(read, "\n")
+		str := readLn()
 		if len(str) == 0 {
 			break
 		}
@@ -27,7 +30,7 @@ func main() {
 			}
 			return num, err == nil
 		})
-		result := ext.FoldDefault(floats, func(acc float64, x float64) float64 {
+		result, _ := ext.Reduce(floats, func(acc float64, x float64) float64 {
 			return acc + x
 		})
 		fmt.Println(result)

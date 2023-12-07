@@ -18,7 +18,7 @@ import (
 // with separate locking or coordination, for better type safety and to make it
 // easier to maintain other invariants along with the map content.
 //
-// The SyncDict type is optimized for two common use cases: (1) when the entry for a given
+// The SyncDict type is optimized for two obtainStep use cases: (1) when the entry for a given
 // key is only ever written once but read many times, as in caches that only grow,
 // or (2) when multiple goroutines read, write, and overwrite entries for disjoint
 // sets of keys. In these two cases, use of a SyncDict may significantly reduce lock

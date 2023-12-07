@@ -1,5 +1,7 @@
 package ext
 
+import "fmt"
+
 type T2[T0, T1 any] struct {
 	V0 T0
 	V1 T1
@@ -98,6 +100,38 @@ func (t T8[T0, T1, T2, T3, T4, T5, T6, T7]) D() (T0, T1, T2, T3, T4, T5, T6, T7)
 
 func (t T9[T0, T1, T2, T3, T4, T5, T6, T7, T8]) D() (T0, T1, T2, T3, T4, T5, T6, T7, T8) {
 	return t.V0, t.V1, t.V2, t.V3, t.V4, t.V5, t.V6, t.V7, t.V8
+}
+
+func (t T2[T0, T1]) String() string {
+	return fmt.Sprintf("(%v,%v)", t.V0, t.V1)
+}
+
+func (t T3[T0, T1, T2]) String() string {
+	return fmt.Sprintf("(%v,%v,%v)", t.V0, t.V1, t.V2)
+}
+
+func (t T4[T0, T1, T2, T3]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3)
+}
+
+func (t T5[T0, T1, T2, T3, T4]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3, t.V4)
+}
+
+func (t T6[T0, T1, T2, T3, T4, T5]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3, t.V4, t.V5)
+}
+
+func (t T7[T0, T1, T2, T3, T4, T5, T6]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3, t.V4, t.V5, t.V6)
+}
+
+func (t T8[T0, T1, T2, T3, T4, T5, T6, T7]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v,%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3, t.V4, t.V5, t.V6, t.V7)
+}
+
+func (t T9[T0, T1, T2, T3, T4, T5, T6, T7, T8]) String() string {
+	return fmt.Sprintf("(%v,%v,%v,%v,%v,%v,%v,%v,%v)", t.V0, t.V1, t.V2, t.V3, t.V4, t.V5, t.V6, t.V7, t.V8)
 }
 
 func T2_[T0, T1 any](v0 T0, v1 T1) T2[T0, T1] {

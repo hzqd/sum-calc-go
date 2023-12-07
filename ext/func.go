@@ -19,6 +19,7 @@ func Map[T, R any](vec Vec[T], fn func(T) R) Vec[R] {
 	return rs
 }
 
+// MapTo 将 ForEach[T]转成ForEach[R]
 func MapTo[TS ForEach[T], RS append_[R, RS], T, R any](
 	ts TS, fn func(T) R, toFn func(int) RS) RS {
 	rs := toFn(ts.Len())
@@ -28,17 +29,15 @@ func MapTo[TS ForEach[T], RS append_[R, RS], T, R any](
 	return rs
 }
 
-// Flatten 将Vec[Vec[T]]转成Vec[T]
+// Flatten 将 Vec[Vec[T]] 平铺成 Vec[T]
 func Flatten[T any](vec Vec[Vec[T]]) Vec[T] {
 	len_ := 0
 	for _, v := range vec {
 		len_ += v.Len()
 	}
-	rs := VecInit[T](len_)
-	i, j := 0, 0
+	rs := Vec_[T](len_)
 	for _, v := range vec {
-		i, j = j, j+v.Len()
-		copy(rs[i:j], v)
+		rs.Appends(v...)
 	}
 	return rs
 }
@@ -54,7 +53,7 @@ func FlatMap[T, R any](vec Vec[T], fn func(T) Vec[R]) Vec[R] {
 
 // Filter 过滤Vec[T]中不需要的元素
 func Filter[T any](vec Vec[T], fn func(T) bool) Vec[T] {
-	rs := Vec_[T](vec.Len())
+	rs := Vec_[T](halfLen(vec.Len()))
 	for _, t := range vec {
 		if fn(t) {
 			rs.Append(t)
@@ -65,7 +64,7 @@ func Filter[T any](vec Vec[T], fn func(T) bool) Vec[T] {
 
 func FilterTo[TS ForEach[T], RS append_[T, RS], T any](
 	ts TS, fn func(T) bool, toFn func(int) RS) RS {
-	rs := toFn(ts.Len())
+	rs := toFn(halfLen(ts.Len()))
 	ts.ForEach(func(t T) {
 		if fn(t) {
 			rs = rs.append_(t)
@@ -74,9 +73,9 @@ func FilterTo[TS ForEach[T], RS append_[T, RS], T any](
 	return rs
 }
 
-// FilterMap 将Vec[T]转成Vec[R] 并过滤不需要的元素
+// FilterMap 将Vec[T]转成Vec[To] 并过滤不需要的元素
 func FilterMap[T, R any](vec Vec[T], fn func(T) (R, bool)) Vec[R] {
-	rs := Vec_[R](vec.Len())
+	rs := Vec_[R](halfLen(vec.Len()))
 	for _, t := range vec {
 		if r, b := fn(t); b {
 			rs.Append(r)
@@ -86,7 +85,7 @@ func FilterMap[T, R any](vec Vec[T], fn func(T) (R, bool)) Vec[R] {
 }
 
 func FilterMapTo[TS ForEach[T], RS append_[R, RS], T, R any](ts TS, fn func(T) (R, bool), toFn func(int) RS) RS {
-	rs := toFn(ts.Len())
+	rs := toFn(halfLen(ts.Len()))
 	ts.ForEach(func(t T) {
 		if r, b := fn(t); b {
 			rs = rs.append_(r)
@@ -236,4 +235,12 @@ func VGroupBy[K comparable, V, T any](vec Vec[T], kvFn func(T) (K, V)) Dict[K, *
 // FollowSort 跟随排序
 func FollowSort[O comparable, T any](orders Vec[O], vec Vec[T], kFn func(T) O) Vec[T] {
 	return FilterMap(orders, ToDict(vec, kFn).Load)
+}
+
+func halfLen(len_ int) int {
+	len_ /= 2
+	if len_%2 == 1 {
+		len_ += 1
+	}
+	return len_
 }
