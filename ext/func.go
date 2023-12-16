@@ -19,7 +19,7 @@ func Map[T, R any](vec Vec[T], fn func(T) R) Vec[R] {
 	return rs
 }
 
-// MapTo 将 ForEach[T]转成ForEach[R]
+// MapTo 将 ForEach[t]转成ForEach[R]
 func MapTo[TS ForEach[T], RS append_[R, RS], T, R any](
 	ts TS, fn func(T) R, toFn func(int) RS) RS {
 	rs := toFn(ts.Len())
@@ -74,11 +74,11 @@ func FilterTo[TS ForEach[T], RS append_[T, RS], T any](
 }
 
 // FilterMap 将Vec[T]转成Vec[To] 并过滤不需要的元素
-func FilterMap[T, R any](vec Vec[T], fn func(T) (R, bool)) Vec[R] {
+func FilterMap[T, R any, O Option[R]](vec Vec[T], fn func(T) O) Vec[R] {
 	rs := Vec_[R](halfLen(vec.Len()))
 	for _, t := range vec {
-		if r, b := fn(t); b {
-			rs.Append(r)
+		if o := fn(t); IsSome[R](o) {
+			rs.Append(UnwrapOption[R, O](o))
 		}
 	}
 	return rs
@@ -118,6 +118,28 @@ func RevFoldDefault[T, R any](vec Vec[T], fn func(R, T) R) R {
 	return RevFold(vec, *new(R), fn)
 }
 
+func Reduce[T any, O Option[T], R Result[T, string]](vec Vec[T], fn func(T, T) T) O {
+	var tmp R
+	size := vec.Len()
+	if size == 0 {
+		tmp = NewErr[T, string, R]("ReduceError: no first element (index out of range '[0]')")
+	}
+	if IsErr[T, string, R](tmp) {
+		return NewNone[T, O]()
+	}
+	tmp = NewOk[T, string, R](vec[0])
+	var res O
+	for i := 1; i < size; i++ {
+		val := MapOk[T, T, string, R, R](tmp, func(acc T) T {
+			num := fn(acc, vec[i])
+			tmp = NewOk[T, string, R](num)
+			return num
+		})
+		res = OkToOption[T, string, R, O](val)
+	}
+	return res
+}
+
 // ReduceError 定义 Reduce 的错误类型
 type ReduceError struct {
 	Message string
@@ -128,8 +150,8 @@ func (e *ReduceError) Error() string {
 	return e.Message
 }
 
-// Reduce : unsafe func, error <-> panic
-func Reduce[T any](vec Vec[T], fn func(T, T) T) (T, error) {
+// OldReduce : unsafe func, error <-> panic
+func OldReduce[T any](vec Vec[T], fn func(T, T) T) (T, error) {
 	var err error
 	var acc T
 	size := vec.Len()
@@ -144,8 +166,8 @@ func Reduce[T any](vec Vec[T], fn func(T, T) T) (T, error) {
 	return acc, err
 }
 
-// RevReduce : unsafe func, error <-> panic
-func RevReduce[T any](vec Vec[T], fn func(T, T) T) (T, error) {
+// OldRevReduce : unsafe func, error <-> panic
+func OldRevReduce[T any](vec Vec[T], fn func(T, T) T) (T, error) {
 	var err error
 	var acc T
 	size := vec.Len()
@@ -230,11 +252,6 @@ func VGroupBy[K comparable, V, T any](vec Vec[T], kvFn func(T) (K, V)) Dict[K, *
 		vs.Append(v)
 	}
 	return dict
-}
-
-// FollowSort 跟随排序
-func FollowSort[O comparable, T any](orders Vec[O], vec Vec[T], kFn func(T) O) Vec[T] {
-	return FilterMap(orders, ToDict(vec, kFn).Load)
 }
 
 func halfLen(len_ int) int {
